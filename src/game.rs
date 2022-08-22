@@ -6,41 +6,56 @@ use winit::{
 
 use crate::renderer;
 #[derive(Debug)]
-pub struct Game {
+pub struct Game{
     window: Window,
-    event_loop: EventLoop<()>,
     renderer: renderer::Renderer,
 }
+#[derive(Debug)]
+pub struct GameLauncher {
+    event_loop: EventLoop<()>,
+    game: Game,
+}
 
-impl Game {
+impl Game{
+    fn render(&mut self){
+        self.renderer.render();
+    }
+}
+
+impl GameLauncher {
     pub async fn new() -> Self {
         let (window, event_loop) = Self::create_window();
         let size = window.inner_size();
         let renderer = renderer::Renderer::new(&window, size.width, size.height).await;
+        let game = Game{window, renderer};
         Self {
-            window,
             event_loop,
-            renderer,
+            game,
         }
     }
 
-    pub fn start(mut self) {
+    pub fn launch(mut self) {
         println!("Game started");
-        self.event_loop
+        let event_loop = self.event_loop;
+        let mut game = self.game;
+        event_loop
             .run(move |event, _, control_flow| match event {
                 Event::WindowEvent {
                     ref event,
                     window_id,
-                } if window_id == self.window.id() => match event {
+                } if window_id == game.window.id() => match event {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::Resized(physical_size) => {
-                        self.renderer.resize(physical_size.width, physical_size.height);
+                        game.renderer.resize(physical_size.width, physical_size.height);
                     },
                     WindowEvent::ScaleFactorChanged{new_inner_size, ..} =>{
-                        self.renderer.resize(new_inner_size.width, new_inner_size.height);
+                        game.renderer.resize(new_inner_size.width, new_inner_size.height);
                     }
                     _ => {}
                 },
+                Event::RedrawRequested(window_id) if window_id == game.window.id() => {
+                    game.render();
+                }
                 _ => {}
             });
     }
@@ -51,3 +66,4 @@ impl Game {
         (window, event_loop)
     }
 }
+

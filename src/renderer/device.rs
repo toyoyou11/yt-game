@@ -42,17 +42,17 @@ pub async fn create_device_surface<W: raw_window_handle::HasRawWindowHandle>(win
 }
 #[derive(Debug)]
 pub struct Device {
-    instance: wgpu::Instance,
-    adapter: wgpu::Adapter,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
+    pub instance: wgpu::Instance,
+    pub adapter: wgpu::Adapter,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
 }
 
 
 #[derive(Debug)]
 pub struct Surface {
-    surface: wgpu::Surface,
-    config: wgpu::SurfaceConfiguration,
+    pub surface: wgpu::Surface,
+    pub config: wgpu::SurfaceConfiguration,
 }
 
 impl Surface{
