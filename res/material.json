@@ -1,0 +1,17 @@
+{
+    "name": "material",
+    "shader": "shader.wgsl",
+    "bindings": [
+        {
+            "texture": {
+                "name": "cube.jpeg",
+                "dimension": "D2"
+            }
+        },
+        {
+            "ty": {
+                "ty": {"Sampler": {"filtering": true}}
+            }
+        }
+    ]
+}

@@ -56,13 +56,13 @@ pub struct Surface {
 }
 
 impl Surface{
-    pub fn resize(&mut self, device: &Device, width: u32, height: u32){
+    pub fn resize(&mut self, device: &wgpu::Device, width: u32, height: u32){
         self.config.width = width;
         self.config.height = height;
         self.reconfigure(device);
     }
 
-    pub fn reconfigure(&self, device: &Device) {
-        self.surface.configure(&device.device, &self.config);
+    pub fn reconfigure(&self, device: &wgpu::Device) {
+        self.surface.configure(device, &self.config);
     }
 }

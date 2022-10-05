@@ -1,0 +1,103 @@
+mod contact_sphere_sphere;
+use super::*;
+use nalgebra as na;
+
+pub use self::contact_sphere_sphere::*;
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Contact {
+    pub point1: na::Point3<f32>,
+    pub point2: na::Point3<f32>,
+    pub normal: na::UnitVector3<f32>,
+    pub separation_distance: f32,
+    pub toi: f32,
+}
+
+impl Contact {
+    pub fn new(
+        point1: na::Point3<f32>,
+        point2: na::Point3<f32>,
+        normal: na::UnitVector3<f32>,
+        separation_distance: f32,
+        toi: f32,
+    ) -> Self {
+        Self {
+            point1,
+            point2,
+            normal,
+            separation_distance,
+            toi,
+        }
+    }
+}
+
+pub fn resolve_contact(b1: &mut RigidBody, b2: &mut RigidBody, contact: &Contact) {
+    if contact.separation_distance >= 0.0 {
+        return;
+    }
+    let inv_mass1 = b1.get_inv_mass();
+    let inv_mass2 = b2.get_inv_mass();
+    if inv_mass1 == 0.0 && inv_mass2 == 0.0 {
+        return;
+    }
+    let pt1 = b1.local_to_world_point(&contact.point1);
+    let pt2 = b2.local_to_world_point(&contact.point2);
+    let elasticity = b1.get_elasticity() * b2.get_elasticity();
+
+    let inv_mass1 = b1.get_inv_mass();
+    let inv_mass2 = b2.get_inv_mass();
+
+    // Calculate collision impulse.
+
+    let inv_inertia_world1 = b1.get_inv_inertia_tensor_world();
+    let inv_inertia_world2 = b2.get_inv_inertia_tensor_world();
+
+    let normal_world = b1.local_to_world_vector(&contact.normal);
+
+    let relative1 = pt1 - b1.get_center_of_mass_world();
+    let relative2 = pt2 - b2.get_center_of_mass_world();
+
+    let angularj1 = (inv_inertia_world1 * relative1.cross(&normal_world)).cross(&relative1);
+    let angularj2 = (inv_inertia_world2 * relative2.cross(&normal_world)).cross(&relative2);
+    let angular_factor = (angularj1 + angularj2).dot(&normal_world);
+
+    let vel1 = b1.get_linear_velocity() + b1.get_angular_velocity().cross(&relative1);
+    let vel2 = b2.get_linear_velocity() + b2.get_angular_velocity().cross(&relative2);
+
+    let v12 = vel1 - vel2;
+    let impulsej =
+        (1.0 + elasticity) * v12.dot(&normal_world) / (inv_mass1 + inv_mass2 + angular_factor);
+    let impulse = normal_world * impulsej;
+
+    b1.apply_impulse_point_world(&(-impulse), &pt1);
+    b2.apply_impulse_point_world(&impulse, &pt2);
+
+    // Calculate friction impulse.
+    let vnorm = normal_world * normal_world.dot(&v12);
+    let vtang = v12 - vnorm;
+    if vtang.magnitude_squared() > 0.00001 {
+        let relative_vtang = vtang.normalize();
+        let friction1 = b1.get_friction();
+        let friction2 = b2.get_friction();
+        let friction = friction1 * friction2;
+
+        let inertia1 = (inv_inertia_world1 * relative1.cross(&relative_vtang)).cross(&relative1);
+        let inertia2 = (inv_inertia_world2 * relative2.cross(&relative_vtang)).cross(&relative2);
+        let inv_inertia = (inertia1 + inertia2).dot(&relative_vtang);
+
+        let reduced_mass = 1.0 / (inv_mass1 + inv_mass2 + inv_inertia);
+        let impulse_friction = vtang * reduced_mass * friction;
+
+        b1.apply_impulse_point_world(&(-impulse_friction), &pt1);
+        b2.apply_impulse_point_world(&impulse_friction, &pt2);
+    }
+
+    // Resolve penetration.
+    let denom = 1.0 / (inv_mass1 + inv_mass2);
+    let t1 = inv_mass1 * denom;
+    let t2 = inv_mass2 * denom;
+    let d = pt2 - pt1;
+    b1.get_position_mut()
+        .append_translation_mut(&na::Translation::from(t1 * d));
+    b2.get_position_mut()
+        .append_translation_mut(&na::Translation::from(-t2 * d));
+}

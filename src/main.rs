@@ -1,11 +1,5 @@
-mod game;
-mod renderer;
-fn main() {
-    pollster::block_on(run());
-}
+use yt_game::*;
 
-async fn run(){
-    env_logger::init();
-    let mut game = game::GameLauncher::new().await;
-    game.launch();
+fn main() {
+    pollster::block_on(crate::run());
 }
