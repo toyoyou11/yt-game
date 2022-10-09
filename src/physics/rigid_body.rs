@@ -14,7 +14,7 @@ pub struct RigidBody {
 
     force_accum: Vector3,
     torque_accum: Vector3,
-    position_modified: bool,
+    moved: bool,
 }
 
 impl RigidBody {
@@ -31,22 +31,22 @@ impl RigidBody {
             anguar_damping: 0.99,
             elasticity: 0.8,
             friction: 0.3,
-            position_modified: false,
+            moved: false,
         }
     }
 
-    /// Calculate new position. Returns true if its position gets modified.
+    /// Calculate new position. Returns true if it moved.
     pub fn update(&mut self, delta_time: Float) -> bool {
         if self.inv_mass == 0.0 {
-            let modified = self.position_modified;
-            self.position_modified = false;
-            return modified;
+            let moved = self.moved;
+            self.moved = false;
+            return moved;
         }
         let acc = self.inv_mass * self.force_accum;
         self.linear_velocity += acc * delta_time;
         self.linear_velocity *= self.damping.powf(delta_time);
         let delta = self.linear_velocity * delta_time;
-        self.position_modified = delta != Vector3::zeros();
+        let mut moved = delta != Vector3::zeros();
         self.position
             .append_translation_mut(&Translation3::from(delta));
 
@@ -60,16 +60,14 @@ impl RigidBody {
         self.angular_velocity += alpha * delta_time;
         self.angular_velocity *= self.anguar_damping.powf(delta_time);
         let delta = self.angular_velocity * delta_time;
-        self.position_modified = delta != Vector3::zeros();
+        moved = moved || delta != Vector3::zeros();
         self.position.append_rotation_wrt_point_mut(
             &UnitQuaternion::from_scaled_axis(delta),
             &self.get_center_of_mass_world(),
         );
         self.clear_force();
 
-        let modified = self.position_modified;
-        self.position_modified = false;
-        modified
+        moved
     }
 
     pub fn apply_force_point_local(&mut self, force: &Vector3, point: &Point3) {
@@ -169,7 +167,7 @@ impl RigidBody {
         &self.position
     }
     pub fn set_position(&mut self, iso: &Isometry3) {
-        self.position_modified = true;
+        self.moved = true;
         self.position = *iso;
     }
     pub fn append_translation(&mut self, translation: &Translation3) {
@@ -227,5 +225,13 @@ impl RigidBody {
     pub fn contact(&self, other: &Self) -> Option<Contact> {
         let pos = self.position.inverse() * other.position;
         self.shape.contact(&other.shape, &pos)
+    }
+
+    pub fn get_aabb(&self) -> AABB {
+        self.shape.build_aabb(&self.position)
+    }
+
+    pub fn get_bounding_sphere(&self) -> BoundingSphere {
+        self.shape.build_bounding_sphere(&self.position)
     }
 }

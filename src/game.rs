@@ -1,6 +1,6 @@
 mod world;
 use std::sync::Arc;
-use nalgebra as na;
+use crate::math::*;
 
 use winit::{
     event::*,
@@ -12,9 +12,9 @@ use super::*;
 
 #[derive(Debug)]
 struct Object{
-    position: na::Isometry3<f32>,
+    position: Isometry3,
     entity: renderer::EntityIndex,
-    rigid: physics::RigidBodyIndex,
+    rigid: physics::RigidBodyId,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -48,9 +48,9 @@ impl Game{
 
         let (obj1, obj2) = Self::create_objects(&mut resource_manager, &mut render_scene, &mut rigid_scene).await;
         let mut camera = renderer::camera::Camera::new();
-        camera.position = na::Isometry3::look_at_lh(&na::Point3::new(0.0, 3.0, -10.0), &na::Point3::new(0.0, 0.0, 0.0), &na::Vector3::y_axis()).inverse();
-        camera.aspect = size.width as f32 / size.height as f32;
-        render_scene.get_lights_mut().directional_light.direction = na::UnitVector3::new_normalize(na::Vector3::new(1.0, -1.0, -1.0));
+        camera.position = Isometry3::look_at_lh(&Point3::new(0.0, 3.0, -10.0), &Point3::new(0.0, 0.0, 0.0), &Vector3::y_axis()).inverse();
+        camera.aspect = size.width as Float / size.height as Float;
+        render_scene.get_lights_mut().directional_light.direction = UnitVector3::new_normalize(Vector3::new(1.0, -1.0, -1.0));
         render_scene.set_camera(camera);
         Self{
             window,
@@ -66,7 +66,7 @@ impl Game{
     }
 
     async fn create_objects(resource: &mut renderer::ResourceManager, render_scene: &mut renderer::Scene, rigid_scene: &mut physics::Scene) -> (Object, Object){
-        let position = na::Isometry3::translation(0.0, 10.0, 0.0) * na::Isometry3::rotation(na::Vector3::new(0.0, std::f32::consts::PI, 0.0));
+        let position = Isometry3::translation(0.0, 10.0, 0.0) * Isometry3::rotation(Vector3::new(0.0, std::f32::consts::PI, 0.0));
         let model = resource.get_model_json("cube_model.json").await.unwrap();
         let mut rigid_body = physics::RigidBody::new(physics::ShapeType::Sphere(physics::shape::Sphere::new(1.0)), 1.0);
         rigid_body.set_position(&position);
@@ -76,13 +76,13 @@ impl Game{
         let entity = render_scene.add_entity(entity);
         let obj1 = Object{ position, rigid, entity };
 
-        let position = na::Isometry3::translation(0.0, -100.0, 0.0);
+        let position = Isometry3::translation(0.0, -100.0, 0.0);
         let mut rigid_body = physics::RigidBody::new(physics::ShapeType::Sphere(physics::shape::Sphere::new(100.0)), 0.0);
         rigid_body.set_position(&position);
         let rigid = rigid_scene.insert(rigid_body);
         let mut entity = renderer::Entity::new(model.clone());
         entity.position = position;
-        entity.scale = na::Scale3::new(100.0, 100.0, 100.0);
+        entity.scale = Scale3::new(100.0, 100.0, 100.0);
         let entity = render_scene.add_entity(entity);
         let obj2 = Object{ position, rigid, entity };
         (obj1, obj2)
@@ -104,7 +104,7 @@ impl Game{
     fn update(&mut self) {
         let dt = self.wait(1.0 / 165.0);
         let rigid_body = self.rigid_scene.get_mut(self.obj1.rigid).unwrap();
-        rigid_body.apply_force_world(&na::Vector3::new(0.0, -10.0, 0.0));
+        rigid_body.apply_force_world(&Vector3::new(0.0, -10.0, 0.0));
         self.rigid_scene.update(dt);
         let rigid_body = self.rigid_scene.get(self.obj1.rigid).unwrap();
         let entity = self.render_scene.get_entity_mut(self.obj1.entity).unwrap();
@@ -114,7 +114,7 @@ impl Game{
         entity.position = *rigid_body.get_position();
     }
 
-    fn wait(&mut self, dt: f32) -> f32{
+    fn wait(&mut self, dt: Float) -> Float{
         let mut next = instant::Instant::now();
         while next.duration_since(self.now).as_secs_f32() < dt{
             next = instant::Instant::now();

@@ -15,7 +15,7 @@ impl Sphere {
 
 impl Shape for Sphere {
     fn get_center_of_mass(&self) -> Point3 {
-        na::Point3::origin()
+        Point3::origin()
     }
     fn get_inertia_tensor(&self) -> Matrix3 {
         let mut tensor = Matrix3::zeros();
@@ -35,5 +35,22 @@ impl Shape for Sphere {
         let radii = Vector3::new(self.radius, self.radius, self.radius);
         let center = pos.translation.vector.into();
         AABB { center, radii }
+    }
+    fn build_bounding_sphere(&self, pos: &Isometry3) -> BoundingSphere {
+        let center = pos.translation.vector.into();
+        let radius = self.radius;
+        BoundingSphere { center, radius }
+    }
+}
+
+impl BuildBoundingVolume<AABB> for Sphere {
+    fn build_bounding_volume(&self, position: &Isometry3) -> AABB {
+        self.build_aabb(position)
+    }
+}
+
+impl BuildBoundingVolume<BoundingSphere> for Sphere {
+    fn build_bounding_volume(&self, position: &Isometry3) -> BoundingSphere {
+        self.build_bounding_sphere(position)
     }
 }

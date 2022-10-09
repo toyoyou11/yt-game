@@ -16,7 +16,7 @@ impl<T> Storage<T> for Vec<T> {
     }
 }
 
-trait BoundingVolume: Clone + Copy + PartialEq {
+pub trait BoundingVolume: Clone + Copy + PartialEq {
     fn intersect(&self, other: &Self) -> bool;
     fn expand(&self, p: &Point3) -> Self {
         let mut ret = self.clone();
@@ -28,7 +28,11 @@ trait BoundingVolume: Clone + Copy + PartialEq {
     fn volume(&self) -> f32;
 }
 
-type BVHLeafId = (ga::Index,);
+pub trait BuildBoundingVolume<V: BoundingVolume> {
+    fn build_bounding_volume(&self, position: &Isometry3) -> V;
+}
+
+pub type BVHLeafId = (ga::Index,);
 type BVHInternalId = (ga::Index,);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BVHNodeId {

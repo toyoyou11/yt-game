@@ -29,3 +29,6 @@ pub type Rotation3 = na::Rotation3<Float>;
 pub type Quaternion = na::Quaternion<Float>;
 pub type UnitQuaternion = na::UnitQuaternion<Float>;
 pub type DualQuaternion = na::DualQuaternion<Float>;
+
+pub type Scale2 = na::Scale2<Float>;
+pub type Scale3 = na::Scale3<Float>;

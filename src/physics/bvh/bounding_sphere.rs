@@ -1,13 +1,13 @@
+use crate::math::*;
 use crate::physics::bvh::BoundingVolume;
-use nalgebra as na;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BoundingSphere {
-    center: na::Point3<f32>,
-    radius: f32,
+    pub center: Point3,
+    pub radius: Float,
 }
 
 impl BoundingSphere {
-    pub fn new(center: na::Point3<f32>, radius: f32) -> Self {
+    pub fn new(center: Point3, radius: f32) -> Self {
         Self { center, radius }
     }
 }
@@ -19,7 +19,7 @@ impl BoundingVolume for BoundingSphere {
         d2 < r * r
     }
 
-    fn expand_mut(&mut self, p: &na::Point3<f32>) {
+    fn expand_mut(&mut self, p: &Point3) {
         let offset = p - self.center;
         let distance2 = offset.magnitude_squared();
         if distance2 <= self.radius * self.radius {
@@ -54,7 +54,7 @@ impl BoundingVolume for BoundingSphere {
         }
     }
 
-    fn volume(&self) -> f32 {
+    fn volume(&self) -> Float {
         self.radius
     }
 }
@@ -62,7 +62,7 @@ impl BoundingVolume for BoundingSphere {
 #[cfg(test)]
 mod test {
     use super::*;
-    use na::Point3;
+    use Point3;
     #[test]
     fn test_sphere_intersect() {
         let tests = [
