@@ -32,7 +32,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub async fn new<W: raw_window_handle::HasRawWindowHandle>(window: &W, window_width: u32, window_height: u32) -> Self {
+    pub async fn new<W: raw_window_handle::HasRawWindowHandle + raw_window_handle::HasRawDisplayHandle>(window: &W, window_width: u32, window_height: u32) -> Self {
         let (device, surface) = device::create_device_surface(window, window_width, window_height).await;
         let queue = Arc::new(device.queue);
         let device = Arc::new(device.device);

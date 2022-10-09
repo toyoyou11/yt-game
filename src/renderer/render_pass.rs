@@ -39,7 +39,7 @@ impl RenderPass {
             bind_group_layouts: &[&material_layout, &camera_buffer.bind_group_layout, &light_buffer.bind_group_layout],
             push_constant_ranges: &[],
         });
-        let shader = resource::load_shader("shader.wgsl", device.as_ref())
+        let shader = resource::load_shader("gl_shader.wgsl", device.as_ref())
             .await
             .unwrap();
         use model::Vertex;

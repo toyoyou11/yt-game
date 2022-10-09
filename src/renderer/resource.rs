@@ -9,6 +9,9 @@ use wgpu::util::DeviceExt;
 
 use super::*;
 
+#[cfg(target_arch="wasm32")]
+use wasm_bindgen::prelude::*;
+
 #[derive(Debug)]
 pub struct ResourceManager{
     device: Arc<wgpu::Device>,

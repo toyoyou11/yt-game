@@ -1,5 +1,5 @@
 
-pub async fn create_device_surface<W: raw_window_handle::HasRawWindowHandle>(window: &W, window_width: u32, window_height: u32) -> (Device, Surface){
+pub async fn create_device_surface<W: raw_window_handle::HasRawWindowHandle + raw_window_handle::HasRawDisplayHandle>(window: &W, window_width: u32, window_height: u32) -> (Device, Surface){
     let instance = wgpu::Instance::new(wgpu::Backends::all());
     let surface = unsafe{instance.create_surface(window)};
     let adapter = instance.request_adapter(
@@ -13,7 +13,11 @@ pub async fn create_device_surface<W: raw_window_handle::HasRawWindowHandle>(win
     let (device, queue) = adapter.request_device(
         &wgpu::DeviceDescriptor{
             features: wgpu::Features::empty(),
-            limits: wgpu::Limits::default(),
+            limits: if cfg!(feature = "webgl"){
+                wgpu::Limits::downlevel_webgl2_defaults()
+            }else{
+                wgpu::Limits::default()
+            },
             label: None,
         },
         None,
@@ -24,6 +28,7 @@ pub async fn create_device_surface<W: raw_window_handle::HasRawWindowHandle>(win
         format: surface.get_supported_formats(&adapter)[0],
         width: window_width,
         height: window_height,
+        alpha_mode: wgpu::CompositeAlphaMode::Auto,
         present_mode: wgpu::PresentMode::Fifo,
     };
     surface.configure(&device, &config);

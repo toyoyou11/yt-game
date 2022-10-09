@@ -190,10 +190,12 @@ impl LightUniformBuffer {
         );
         let num_points = points.len() as u32;
         queue.write_buffer(&self.point_buffer, 0, bytemuck::bytes_of(&num_points));
-        queue.write_buffer(
-            &self.point_buffer,
-            size_of::<[u32; 4]>() as wgpu::BufferAddress,
-            bytemuck::cast_slice(points),
-        );
+        if points.len() > 0 {
+            queue.write_buffer(
+                &self.point_buffer,
+                size_of::<[u32; 4]>() as wgpu::BufferAddress,
+                bytemuck::cast_slice(points),
+            );
+        }
     }
 }

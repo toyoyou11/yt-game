@@ -1,24 +1,24 @@
 mod contact_sphere_sphere;
 use super::*;
-use nalgebra as na;
+use crate::math::*;
 
 pub use self::contact_sphere_sphere::*;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Contact {
-    pub point1: na::Point3<f32>,
-    pub point2: na::Point3<f32>,
-    pub normal: na::UnitVector3<f32>,
-    pub separation_distance: f32,
-    pub toi: f32,
+    pub point1: Point3,
+    pub point2: Point3,
+    pub normal: UnitVector3,
+    pub separation_distance: Float,
+    pub toi: Float,
 }
 
 impl Contact {
     pub fn new(
-        point1: na::Point3<f32>,
-        point2: na::Point3<f32>,
-        normal: na::UnitVector3<f32>,
-        separation_distance: f32,
-        toi: f32,
+        point1: Point3,
+        point2: Point3,
+        normal: UnitVector3,
+        separation_distance: Float,
+        toi: Float,
     ) -> Self {
         Self {
             point1,
@@ -96,8 +96,6 @@ pub fn resolve_contact(b1: &mut RigidBody, b2: &mut RigidBody, contact: &Contact
     let t1 = inv_mass1 * denom;
     let t2 = inv_mass2 * denom;
     let d = pt2 - pt1;
-    b1.get_position_mut()
-        .append_translation_mut(&na::Translation::from(t1 * d));
-    b2.get_position_mut()
-        .append_translation_mut(&na::Translation::from(-t2 * d));
+    b1.append_translation(&Translation3::from(t1 * d));
+    b2.append_translation(&Translation3::from(-t2 * d));
 }

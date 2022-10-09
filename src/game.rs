@@ -1,5 +1,4 @@
 mod world;
-use std::time;
 use std::sync::Arc;
 use nalgebra as na;
 
@@ -35,7 +34,7 @@ pub struct Game{
     rigid_scene: physics::Scene,
     obj1: Object,
     obj2: Object,
-    now: time::Instant,
+    now: instant::Instant,
 }
 
 impl Game{
@@ -61,7 +60,7 @@ impl Game{
             rigid_scene,
             obj1,
             obj2,
-            now: time::Instant::now(),
+            now: instant::Instant::now(),
         }
 
     }
@@ -116,14 +115,14 @@ impl Game{
     }
 
     fn wait(&mut self, dt: f32) -> f32{
-        let mut next = time::Instant::now();
+        let mut next = instant::Instant::now();
         while next.duration_since(self.now).as_secs_f32() < dt{
-            next = time::Instant::now();
+            next = instant::Instant::now();
         }
         let delta_time = next.duration_since(self.now).as_secs_f32();
         self.now = next;
         
-        delta_time
+        delta_time.min(1.0 / 15.0)
     }
 
     fn sweep(&mut self, control_flow: &mut ControlFlow){
