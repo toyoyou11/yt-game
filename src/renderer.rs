@@ -4,6 +4,7 @@ pub mod resource;
 pub mod scene;
 pub mod model;
 pub mod entity;
+mod ball_generator;
 mod texture;
 mod render_pass;
 mod device;

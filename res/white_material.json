@@ -1,0 +1,8 @@
+{
+    "name": "white_material",
+    "albedo": [0.9, 0.9, 0.9],
+    "alpha": 1.0,
+    "roughness": 0.8,
+    "metalic": 0.0,
+    "texture": null
+}

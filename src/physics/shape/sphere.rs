@@ -14,6 +14,9 @@ impl Sphere {
 }
 
 impl Shape for Sphere {
+    fn supporting_point(&self, dir: &UnitVector3, bias: Float) -> Point3 {
+        ((self.radius + bias) * dir.into_inner()).into()
+    }
     fn get_center_of_mass(&self) -> Point3 {
         Point3::origin()
     }

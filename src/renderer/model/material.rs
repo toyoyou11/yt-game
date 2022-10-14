@@ -1,21 +1,31 @@
 use super::super::texture::Texture;
 use std::sync::Arc;
 
+#[derive(Debug)]
+pub struct MaterialDescriptor<'a> {
+    pub name: &'a str,
+    pub albedo: [f32; 3],
+    pub alpha: f32,
+    pub roughness: f32,
+    pub metalic: f32,
+    pub texture: Arc<Texture>,
+}
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct MaterialUniform {
-    pub diffuse: [f32; 3],
+    pub albedo: [f32; 3],
     pub alpha: f32,
-    pub specular: [f32; 3],
-    pub shininess: f32,
+    pub roughness: f32,
+    pub metalic: f32,
+    pub padding: [u32; 2],
 }
 
 #[derive(Debug)]
 pub struct Material {
     pub name: String,
     pub buffer: wgpu::Buffer,
-    pub diffuse_texture: Arc<Texture>,
-    pub specular_texture: Arc<Texture>,
+    pub texture: Arc<Texture>,
     pub bind_group: wgpu::BindGroup,
 }
 
@@ -47,16 +57,6 @@ impl Material {
             wgpu::BindGroupLayoutEntry {
                 binding: 2,
                 visibility: wgpu::ShaderStages::FRAGMENT,
-                ty: wgpu::BindingType::Texture {
-                    multisampled: false,
-                    view_dimension: wgpu::TextureViewDimension::D2,
-                    sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                },
-                count: None,
-            },
-            wgpu::BindGroupLayoutEntry {
-                binding: 3,
-                visibility: wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                 count: None,
             },
@@ -64,17 +64,18 @@ impl Material {
         label: Some("material bind group layout"),
     };
 
-    pub fn new(
-        name: String,
-        uniform: MaterialUniform,
-        diffuse_texture: Arc<Texture>,
-        specular_texture: Arc<Texture>,
-        device: &wgpu::Device,
-    ) -> Self {
+    pub fn new<'a>(device: &wgpu::Device, desc: &MaterialDescriptor<'a>) -> Self {
+        let uniform = MaterialUniform {
+            albedo: desc.albedo,
+            alpha: desc.alpha,
+            roughness: desc.roughness,
+            metalic: desc.metalic,
+            padding: [0, 0],
+        };
         let layout = device.create_bind_group_layout(&Self::LAYOUT);
         use wgpu::util::DeviceExt;
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some(&name),
+            label: Some(desc.name),
             contents: bytemuck::cast_slice(&[uniform]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
@@ -87,25 +88,20 @@ impl Material {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
+                    resource: wgpu::BindingResource::TextureView(&desc.texture.view),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
-                    resource: wgpu::BindingResource::TextureView(&specular_texture.view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
+                    resource: wgpu::BindingResource::Sampler(&desc.texture.sampler),
                 },
             ],
             label: None,
         });
         Self {
-            name,
+            name: desc.name.into(),
             buffer,
             bind_group,
-            diffuse_texture,
-            specular_texture,
+            texture: desc.texture.clone(),
         }
     }
 }

@@ -1,0 +1,5 @@
+{
+    "name": "cube",
+    "meshes": "cube_mesh.json",
+    "materials": ["blue_material.json"]
+}

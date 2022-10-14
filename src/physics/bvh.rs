@@ -80,6 +80,7 @@ impl<V, T> BVH<V, T> {
     fn get_leaf(&self, id: BVHLeafId) -> Option<&BVHLeaf<V, T>> {
         self.leaves.get(id.0)
     }
+
     fn get_leaf_mut(&mut self, id: BVHLeafId) -> Option<&mut BVHLeaf<V, T>> {
         self.leaves.get_mut(id.0)
     }
@@ -91,6 +92,7 @@ impl<V, T> BVH<V, T> {
     fn insert_internal(&mut self, node: BVHInternal<V>) -> BVHInternalId {
         (self.internals.insert(node),)
     }
+
     fn get_internal(&self, id: BVHInternalId) -> Option<&BVHInternal<V>> {
         self.internals.get(id.0)
     }
@@ -228,7 +230,7 @@ impl<V: BoundingVolume, T> BVH<V, T> {
         let left_bounding = self.get_bounding_volume(node.left_child).unwrap();
         let right_bounding = self.get_bounding_volume(node.right_child).unwrap();
         let new_bounding = left_bounding.merge(&right_bounding);
-        if new_bounding == node.bounding {
+        if new_bounding != node.bounding {
             let node_mut = self.get_internal_mut(id).unwrap();
             node_mut.bounding = new_bounding;
             if let Some(parent) = node_mut.parent {
@@ -473,6 +475,18 @@ mod test {
             assert_eq!(iter.next().unwrap(), &(&2, &3));
             assert_eq!(iter.next(), None);
         }
+        let leaf2_id = bvh.insert(
+            1u32,
+            AABB::new(Point3::new(1.5, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0)),
+        );
+        {
+            let mut contacts = Vec::new();
+            bvh.get_overlaps(&mut contacts);
+            let mut iter = contacts.iter();
+            assert_eq!(iter.next().unwrap(), &(&0, &1));
+            assert_eq!(iter.next().unwrap(), &(&2, &3));
+            assert_eq!(iter.next(), None);
+        }
 
         let leaf1_data = bvh.remove(leaf1_id).unwrap();
         assert_eq!(leaf1_data, 0);
@@ -501,8 +515,17 @@ mod test {
             let mut iter = contacts.iter();
             assert_eq!(iter.next(), None);
         }
-        assert_eq!(bvh.leaves.len(), 0);
-        assert_eq!(bvh.internals.len(), 0);
-        assert_eq!(bvh.root, None);
+        assert_eq!(bvh.leaves.len(), 1);
+        let leaf1_id = bvh.insert(
+            0u32,
+            AABB::new(Point3::origin(), Vector3::new(1.0, 1.0, 1.0)),
+        );
+        {
+            let mut contacts = Vec::new();
+            bvh.get_overlaps(&mut contacts);
+            let mut iter = contacts.iter();
+            assert_eq!(iter.next().unwrap(), &(&1, &0));
+            assert_eq!(iter.next(), None);
+        }
     }
 }

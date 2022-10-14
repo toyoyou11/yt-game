@@ -66,7 +66,6 @@ impl RigidBody {
             &self.get_center_of_mass_world(),
         );
         self.clear_force();
-
         moved
     }
 

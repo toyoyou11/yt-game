@@ -1,5 +1,6 @@
+pub mod cube;
 pub mod sphere;
-pub use sphere::*;
+pub use self::{cube::*, sphere::*};
 
 use crate::math::*;
 use crate::physics::*;
@@ -7,6 +8,7 @@ use crate::physics::*;
 #[derive(Debug, Clone)]
 pub enum ShapeType {
     Sphere(Sphere),
+    Cube(Cube),
 }
 
 impl ShapeType {
@@ -24,7 +26,18 @@ impl ShapeType {
     pub fn contact(&self, other: &Self, pos12: &Isometry3) -> Option<Contact> {
         match (self, other) {
             (Self::Sphere(s1), Self::Sphere(s2)) => contact_sphere_sphere(s1, s2, pos12),
-            _ => None,
+            (Self::Sphere(s), Self::Cube(c)) => {
+                let contact = contact_cube_sphere(c, s, &pos12.inverse()).map(|c| c.flip());
+                contact
+            }
+            (Self::Cube(c), Self::Sphere(s)) => {
+                let contact = contact_cube_sphere(c, s, pos12);
+                contact
+            }
+            (Self::Cube(c1), Self::Cube(c2)) => contact_cube_cube(c1, c2, pos12),
+            _ => {
+                unimplemented!()
+            }
         }
     }
 
@@ -38,11 +51,22 @@ impl ShapeType {
     pub fn as_shape(&self) -> &dyn Shape {
         match self {
             Self::Sphere(s) => s,
+            Self::Cube(c) => c,
         }
     }
 }
 
 pub trait Shape {
+    fn supporting_point(&self, dir: &UnitVector3, bias: Float) -> Point3;
+    fn supporting_point_world(
+        &self,
+        dir: &UnitVector3,
+        bias: Float,
+        position: &Isometry3,
+    ) -> Point3 {
+        let support_local = self.supporting_point(dir, bias);
+        position.transform_point(&support_local)
+    }
     fn get_center_of_mass(&self) -> Point3;
     fn get_inertia_tensor(&self) -> Matrix3;
     fn get_inv_inertia_tensor(&self) -> Matrix3 {

@@ -1,0 +1,8 @@
+{
+    "name": "blue_material",
+    "albedo": [0.1, 0.1, 0.7],
+    "alpha": 1.0,
+    "roughness": 0.3,
+    "metalic": 0.0,
+    "texture": null
+}

@@ -1,0 +1,8 @@
+{
+    "name": "red_material",
+    "albedo": [0.7, 0.1, 0.1],
+    "alpha": 1.0,
+    "roughness": 0.1,
+    "metalic": 1.0,
+    "texture": null
+}

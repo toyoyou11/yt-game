@@ -1,7 +1,10 @@
 mod camera_uniform_buffer;
+mod shadow;
 mod light_uniform_buffer;
 use super::*;
 use std::sync::Arc;
+
+use crate::math::*;
 
 use camera_uniform_buffer::*;
 use light_uniform_buffer::*;
@@ -39,7 +42,7 @@ impl RenderPass {
             bind_group_layouts: &[&material_layout, &camera_buffer.bind_group_layout, &light_buffer.bind_group_layout],
             push_constant_ranges: &[],
         });
-        let shader = resource::load_shader("gl_shader.wgsl", device.as_ref())
+        let shader = resource::load_shader("pbr_shader.wgsl", device.as_ref())
             .await
             .unwrap();
         use model::Vertex;
@@ -102,7 +105,7 @@ impl RenderPass {
 
     pub fn render(&mut self, scene: &Scene, view: &wgpu::TextureView) {
         self.update_camera_uniforms(scene.get_camera());
-        self.update_light_uniforms(scene.get_lights());
+        self.update_light_uniforms(scene);
 
 
         let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor{
@@ -144,8 +147,13 @@ impl RenderPass {
                 self.instance_buffer = instance::InstanceBuffer::new(self.device.as_ref(), 2 * num_entities as wgpu::BufferAddress);
             }
             for (_, entity) in scene.iter_entities(){
+                let scaling = Matrix3::new(entity.scale.x, 0.0, 0.0, 0.0, entity.scale.y, 0.0, 0.0, 0.0, entity.scale.z);
+                let mut normal_mat = entity.position.rotation.to_rotation_matrix() * scaling;
+                normal_mat = normal_mat.try_inverse().unwrap().transpose();
+
                 let instance_raw = instance::InstanceRaw{
-                    model: ( entity.position.to_homogeneous() * entity.scale.to_homogeneous() ).into()
+                    model: ( entity.position.to_homogeneous() * entity.scale.to_homogeneous() ).into(),
+                    normal: normal_mat.into(),
                 };
                 let instance_slice = self.instance_buffer.insert(&instance_raw, self.queue.as_ref()).unwrap();
                 render_pass.set_vertex_buffer(1, instance_slice);
@@ -164,10 +172,10 @@ impl RenderPass {
             proj: camera.build_rev_projection_matrix().into()};
         self.camera_buffer.update(self.queue.as_ref(),camera_uniforms);
     }
-    fn update_light_uniforms(&self, lights: &light::Lights){
-        let ambient = AmbientLightUniforms::new(lights.ambient_light);
-        let directional = DirectionalLightUniforms::new(lights.directional_light);
-        let point_lights = lights.point_lights.iter().map(|l| {PointLightUniforms::new(*l)}).collect::<Vec<_>>();
+    fn update_light_uniforms(&self, scene: &Scene){
+        let ambient = AmbientLightUniforms::new(*scene.get_ambient_light());
+        let directional = DirectionalLightUniforms::new(*scene.get_directional_light());
+        let point_lights = scene.iter_point_lights().map(|(_,l)| {PointLightUniforms::new(*l)}).collect::<Vec<_>>();
 
         self.light_buffer.update(self.queue.as_ref(), ambient, directional, &point_lights);
     }

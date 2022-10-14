@@ -7,10 +7,38 @@ pub use mesh::*;
 pub use vertex::*;
 
 #[derive(Debug)]
+pub struct ModelDescriptor<'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, T> {
+    pub name: &'a str,
+    pub meshes: &'b [&'c MeshDescriptor<'f, 'g, 'h, T>],
+    pub materials: &'d [&'e MaterialDescriptor<'i>],
+}
+
+#[derive(Debug)]
 pub struct Model {
     pub name: String,
     pub meshes: Vec<Mesh>,
     pub materials: Vec<Material>,
+}
+
+impl Model {
+    pub fn new<T: Vertex>(device: &wgpu::Device, desc: &ModelDescriptor<T>) -> Self {
+        let name = desc.name.into();
+        let meshes = desc
+            .meshes
+            .iter()
+            .map(|desc| Mesh::new(device, desc))
+            .collect::<Vec<_>>();
+        let materials = desc
+            .materials
+            .iter()
+            .map(|desc| Material::new(device, desc))
+            .collect::<Vec<_>>();
+        Self {
+            name,
+            meshes,
+            materials,
+        }
+    }
 }
 
 pub trait DrawModel<'a> {

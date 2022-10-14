@@ -1,4 +1,12 @@
 use super::vertex::*;
+
+#[derive(Debug)]
+pub struct MeshDescriptor<'a, 'b, 'c, T> {
+    name: &'a str,
+    vertices: &'b [T],
+    indices: &'c [u32],
+    material: usize,
+}
 #[derive(Debug)]
 pub struct Mesh {
     pub name: String,
@@ -10,12 +18,24 @@ pub struct Mesh {
 }
 
 impl Mesh {
+    pub fn new<'a, 'b, 'c, T: Vertex>(
+        device: &wgpu::Device,
+        desc: &MeshDescriptor<'a, 'b, 'c, T>,
+    ) -> Self {
+        Self::new_with_index_u32(
+            device,
+            desc.name.into(),
+            desc.vertices,
+            desc.indices,
+            desc.material,
+        )
+    }
     pub fn new_with_index_u32<T: Vertex>(
+        device: &wgpu::Device,
         name: String,
         vertices: &[T],
         indices: &[u32],
         material: usize,
-        device: &wgpu::Device,
     ) -> Self {
         use wgpu::util::DeviceExt;
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -40,11 +60,11 @@ impl Mesh {
         }
     }
     pub fn new_with_index_u16<T: Vertex>(
+        device: &wgpu::Device,
         name: String,
         vertices: &[T],
         indices: &[u16],
         material: usize,
-        device: &wgpu::Device,
     ) -> Self {
         use wgpu::util::DeviceExt;
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

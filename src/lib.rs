@@ -1,4 +1,5 @@
 mod game;
+mod input;
 mod math;
 mod physics;
 mod renderer;
@@ -17,12 +18,12 @@ pub async fn run(){
         }
     }
     let event_loop = winit::event_loop::EventLoop::new();
-    let window = winit::window::WindowBuilder::new().build(&event_loop).unwrap();
+    let window = winit::window::WindowBuilder::new().with_inner_size(winit::dpi::PhysicalSize::new(800, 800)).build(&event_loop).unwrap();
 
     #[cfg(target_arch = "wasm32")]
     {
         use winit::dpi::PhysicalSize;
-        window.set_inner_size(PhysicalSize::new(600, 400));
+        window.set_inner_size(PhysicalSize::new(800, 800));
 
             use winit::platform::web::WindowExtWebSys;
             web_sys::window()

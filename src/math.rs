@@ -1,6 +1,11 @@
 use nalgebra as na;
 
 pub type Float = f32;
+pub const PI: Float = std::f32::consts::PI;
+pub const E: Float = std::f32::consts::E;
+pub const FLOAT_MAX: Float = f32::MAX;
+pub const FLOAT_MIN: Float = f32::MIN;
+pub const FLOAT_MIN_POSITIVE: Float = f32::MIN_POSITIVE;
 
 pub type Point2 = na::Point2<Float>;
 pub type Point3 = na::Point3<Float>;
@@ -32,3 +37,7 @@ pub type DualQuaternion = na::DualQuaternion<Float>;
 
 pub type Scale2 = na::Scale2<Float>;
 pub type Scale3 = na::Scale3<Float>;
+
+pub fn project_vector_on_axis(v: &Vector3, axis: &Vector3) -> Vector3 {
+    v.dot(&axis) * axis / axis.magnitude_squared()
+}

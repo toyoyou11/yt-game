@@ -1,13 +1,16 @@
+mod contact_cube_cube;
+mod contact_cube_sphere;
 mod contact_sphere_sphere;
 use super::*;
 use crate::math::*;
 
-pub use self::contact_sphere_sphere::*;
+pub use self::{contact_cube_cube::*, contact_cube_sphere::*, contact_sphere_sphere::*};
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Contact {
     pub point1: Point3,
     pub point2: Point3,
-    pub normal: UnitVector3,
+    pub normal1: UnitVector3,
+    pub normal2: UnitVector3,
     pub separation_distance: Float,
     pub toi: Float,
 }
@@ -16,16 +19,27 @@ impl Contact {
     pub fn new(
         point1: Point3,
         point2: Point3,
-        normal: UnitVector3,
+        normal1: UnitVector3,
+        normal2: UnitVector3,
         separation_distance: Float,
         toi: Float,
     ) -> Self {
         Self {
             point1,
             point2,
-            normal,
+            normal1,
+            normal2,
             separation_distance,
             toi,
+        }
+    }
+    pub fn flip(&self) -> Self {
+        Self {
+            point1: self.point2,
+            point2: self.point1,
+            normal1: self.normal2,
+            normal2: self.normal1,
+            ..*self
         }
     }
 }
@@ -51,7 +65,7 @@ pub fn resolve_contact(b1: &mut RigidBody, b2: &mut RigidBody, contact: &Contact
     let inv_inertia_world1 = b1.get_inv_inertia_tensor_world();
     let inv_inertia_world2 = b2.get_inv_inertia_tensor_world();
 
-    let normal_world = b1.local_to_world_vector(&contact.normal);
+    let normal_world = b1.local_to_world_vector(&contact.normal1);
 
     let relative1 = pt1 - b1.get_center_of_mass_world();
     let relative2 = pt2 - b2.get_center_of_mass_world();
