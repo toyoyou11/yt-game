@@ -1,0 +1,12 @@
+{
+  "name": "yt-game",
+  "version": "0.1.0",
+  "files": [
+    "yt_game_bg.wasm",
+    "yt_game.js",
+    "yt_game.d.ts"
+  ],
+  "module": "yt_game.js",
+  "types": "yt_game.d.ts",
+  "sideEffects": false
+}

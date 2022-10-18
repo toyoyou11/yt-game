@@ -3,6 +3,6 @@
     "albedo": [0.1, 0.7, 0.1],
     "alpha": 1.0,
     "roughness": 0.3,
-    "metalic": 1.0,
+    "metalic": 0.0,
     "texture": null
 }
