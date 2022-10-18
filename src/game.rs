@@ -96,6 +96,7 @@ impl Game{
         let position = Isometry3::translation(0.0, 10.0, 0.0) * Isometry3::rotation(Vector3::new(0.0, PI / 2.0, 0.0));
         let mut rigid_body = physics::RigidBody::new(physics::ShapeType::Cube(physics::Cube::new(Vector3::new(1.0, 1.0, 1.0))), 0.3);
         rigid_body.set_position(&position);
+        rigid_body.set_linear_velocity(&Vector3::new(1.0, 0.0, 0.0));
         let mut entity = renderer::Entity::new(model.clone());
         entity.position = position;
         let obj1 = Object::new( position, entity, rigid_body , render_scene, rigid_scene);
@@ -106,6 +107,7 @@ impl Game{
         let position = Isometry3::translation(3.0, 5.0, 0.0) * Isometry3::rotation(Vector3::new(1.0, PI / 2.0, 0.0));
         let mut rigid_body = physics::RigidBody::new(physics::ShapeType::Cube(physics::Cube::new(Vector3::new(1.0, 1.0, 1.0))), 0.3);
         rigid_body.set_position(&position);
+        rigid_body.set_linear_velocity(&Vector3::new(-0.0, 0.0, 0.0));
         let mut entity = renderer::Entity::new(model.clone());
         entity.position = position;
         let obj1 = Object::new( position, entity, rigid_body , render_scene, rigid_scene);
@@ -170,7 +172,6 @@ impl Game{
 }
 
 pub async fn launch(window: Window, event_loop: EventLoop<()>) {
-    println!("Game started");
     let mut game = Game::new(window).await;
     event_loop
         .run(move |event, _, control_flow| match event {

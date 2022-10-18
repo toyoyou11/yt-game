@@ -291,9 +291,8 @@ impl<V: BoundingVolume, T> BVH<V, T> {
                 if leaf.bounding.intersect(&internal.bounding) {
                     self.get_overlaps_pair(id1, internal.left_child, storage);
                     self.get_overlaps_pair(id1, internal.right_child, storage);
-                } else {
-                    self.get_overlaps_pair(internal.left_child, internal.right_child, storage);
                 }
+                self.get_overlaps_pair(internal.left_child, internal.right_child, storage);
             }
             (BVHNodeId::Internal(iidx), BVHNodeId::Leaf(lidx)) => {
                 let (leaf, internal) = (
@@ -303,9 +302,8 @@ impl<V: BoundingVolume, T> BVH<V, T> {
                 if leaf.bounding.intersect(&internal.bounding) {
                     self.get_overlaps_pair(internal.left_child, id2, storage);
                     self.get_overlaps_pair(internal.right_child, id2, storage);
-                } else {
-                    self.get_overlaps_pair(internal.left_child, internal.right_child, storage);
                 }
+                self.get_overlaps_pair(internal.left_child, internal.right_child, storage);
             }
             (BVHNodeId::Internal(idx1), BVHNodeId::Internal(idx2)) => {
                 let (i1, i2) = (
@@ -313,17 +311,16 @@ impl<V: BoundingVolume, T> BVH<V, T> {
                     self.get_internal(idx2).unwrap(),
                 );
                 if i1.bounding.intersect(&i2.bounding) {
-                    if i1.bounding.volume() < i2.bounding.volume() {
+                    if i1.bounding.volume() > i2.bounding.volume() {
                         self.get_overlaps_pair(i1.left_child, id2, storage);
                         self.get_overlaps_pair(i1.right_child, id2, storage);
                     } else {
                         self.get_overlaps_pair(id1, i2.left_child, storage);
                         self.get_overlaps_pair(id1, i2.right_child, storage);
                     }
-                } else {
-                    self.get_overlaps_pair(i1.left_child, i1.right_child, storage);
-                    self.get_overlaps_pair(i2.left_child, i2.right_child, storage);
                 }
+                self.get_overlaps_pair(i1.left_child, i1.right_child, storage);
+                self.get_overlaps_pair(i2.left_child, i2.right_child, storage);
             }
         }
     }

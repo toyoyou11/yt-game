@@ -45,6 +45,16 @@ impl PhysicsWorld {
                 *bounding_id = new_bounding_id;
             }
         }
+        //let ids = self.bodies.iter().map(|(id, _)| id).collect::<Vec<_>>();
+        //for i in 0..ids.len() {
+        //    for j in i + 1..ids.len() {
+        //        if let (Some(body1), Some(body2)) = self.bodies.get2_mut(ids[i], ids[j]) {
+        //            if let Some(contact) = body1.0.contact(&body2.0) {
+        //                resolve_contact(&mut body1.0, &mut body2.0, &contact);
+        //            }
+        //        }
+        //    }
+        //}
         let mut overlaps = Vec::new();
         self.bvh.get_overlaps(&mut overlaps);
 
@@ -59,8 +69,6 @@ impl PhysicsWorld {
                 panic!();
             }
         }
-
-        println!("{:?}", self.bvh);
     }
 
     pub fn insert(&mut self, rigid_body: RigidBody) -> RigidBodyId {
